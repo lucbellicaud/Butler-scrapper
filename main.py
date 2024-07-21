@@ -15,16 +15,16 @@ def get_first_board_number(
     number_of_boards: int,
 ) -> int:
     board_url = "{}BoardAcross.asp?qboard={}.{}..{}".format(
-                competition_url,
-                f"001",
-                f"{match_number:02d}",
-                competition_magic_number,
-            )
+        competition_url,
+        f"001",
+        f"{match_number:02d}",
+        competition_magic_number,
+    )
     list_of_df = pd.read_html(board_url)
     if len(list_of_df) >= 5:
         return 1
-    modulo_possibilities = [10,12,14,16,18]
-    for i in range(1,4):
+    modulo_possibilities = [10, 12, 14, 16, 18]
+    for i in range(1, 4):
         for modulo in modulo_possibilities:
             board_url = "{}BoardAcross.asp?qboard={}.{}..{}".format(
                 competition_url,
@@ -110,7 +110,7 @@ def get_the_players(
     full_link: str | None = None,
 ):
     assert competition_url is not None or full_link is not None
-    url = "{}/BoardDetails.asp?qmatchid={}".format(competition_url, match_id)
+    url = "{}/Asp/BoardDetails.asp?qmatchid={}".format(competition_url, match_id)
     if full_link is not None:
         url = full_link
     # url = "http://db.eurobridge.org/repository/competitions/24Herning/microsite/Asp/BoardDetails.asp?qmatchid=119334"
@@ -310,13 +310,30 @@ def extract_full_round_data(
 def extract_all_the_data(
     competition_url: str,
     competition_magic_number: int,
-    round_number_to_extract: List[int],
+    round_number_to_extract: List[int] | int,
+    number_of_boards: int,
     use_cache: bool = True,
     tournament_name: str = "tournament",
-    number_of_boards: int = 16,
-):
+) -> None:
+    
+    """This is the main function used to collect all the data from a competition. It will extract the data from all the rounds and store it in a folder named tournament_name. The data will be stored in csv files.
+
+    Args:
+        competition_url (str): The link of the microsite. Should end with microsite/. Example : http://db.eurobridge.org/repository/competitions/24wroclaw/microsite
+        competition_magic_number (int): Each competition has a "magic number" that is used to identify it. You can find it by clicking on a round, you'll find it at the end of the URL. Example : 2430
+        round_number_to_extract (List[int]) or int : The list of rounds to extract. You can pass a list to extract some precise rounds, or an integer to exract all the round <= to this round number. Example : [1, 2, 3, 4, 5] or 5
+        number_of_boards (int, optional): Number of boards played by round.
+        use_cache (bool, optional): If you already extracted the competition, you can use the cache to not request the data again. Defaults to True.
+        tournament_name (str, optional): Name of the folder where you are going to store you data. Defaults to "tournament".
+
+    Returns None and store all the data into csv files in the folder tournament_name.
+    """
+
     if not os.path.exists(tournament_name):
         os.makedirs(tournament_name)
+    if isinstance(round_number_to_extract, int):
+        round_number_to_extract = list(range(1, round_number_to_extract + 1))
+    assert isinstance(round_number_to_extract, list)
     average_data = {}
     # full_data = {}
     for i, round_number in enumerate(round_number_to_extract):
@@ -380,17 +397,17 @@ def extract_all_the_data(
     # Create the folder if it does not exist
     df.to_csv("{}/data.csv".format(tournament_name))
 
-    return average_data
+    return None
 
 
 extract_all_the_data(
     "http://db.eurobridge.org/repository/competitions/24wroclaw/microsite/Asp/",
     2434,
-    list(range(1, 14)),
-    # list(range(1, 4)),
-    use_cache=False,
-    tournament_name="U31 Wroclaw",
+    13,
     number_of_boards=16,
+    # list(range(1, 4)),
+    # use_cache=False,
+    tournament_name="U31 Wroclaw",
 )
 
 
